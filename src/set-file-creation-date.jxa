@@ -1,0 +1,74 @@
+// Import Objective-C Foundation Framework
+ObjC.import("Foundation")
+
+// Use “System Events” library because HazelHelper daemon, ie. “Application.currentApplication())” cannot interact with user, ex. app.displayAlert()
+// const app = Application.currentApplication()
+const app = Application("System Events")
+app.includeStandardAdditions = true
+
+/**
+ * Convert JavaScript Date object to NSDate object
+ *
+ * @param creationDateJS {object} - JavaScript Date object
+ *
+ * @returns {object} Cocoa NSDate object
+ */
+const convertJSDateToNSDate = (JSDate) => {
+  return $.NSDate.alloc.initWithTimeIntervalSince1970(JSDate/1000)
+}
+
+/**
+ * Set the creation date of a file matched in a Hazel workflow
+ *
+ * @param theFile {object} - Matching file
+ * @param inputAttributes[0] {date} - New target creation date (JavaScript Date object)
+ */
+function hazelProcessFile(theFile, inputAttributes) {
+
+  const [creationDateJS] = inputAttributes
+
+  // Initialize NSFileManager
+  const fileManager = $.NSFileManager.defaultManager;
+
+  // Get absolute path of input file
+  const path = $(theFile.toString()).stringByStandardizingPath
+
+  // Set Time to midnight (Local time zone)
+  creationDateJS.setHours(0, 0, 0)
+
+  const creationDateNS = convertJSDateToNSDate(creationDateJS)
+
+  // Set creation date of file
+    var error = $()
+    fileManager.setAttributesOfItemAtPathError($({NSFileCreationDate: creationDateNS}), path, error)
+
+    if (!!error.js) {
+      const alertTitle = error.localizedDescription.js
+      const alertOptions = {
+        message: error.localizedRecoverySuggestion.js,
+        as: "critical",
+        buttons: error.localizedRecoveryOptions.js
+      }
+
+      app.displayAlert(alertTitle, alertOptions)
+      throw new Error(alertTitle)
+    }
+}
+
+/**
+ * Test Script for debugging in Script Editor App
+ */
+const testScript = () => {
+  const document = app.chooseFile({
+    withPrompt: "Please select a document to process:"
+    })
+
+  const testDate = new Date()
+
+  testDate.setFullYear(2020, 09, 31) // Month is zero-indexed
+  testDate.setHours(13, 21, 00)
+
+  hazelProcessFile(document, [testDate])
+}
+
+// testScript()
