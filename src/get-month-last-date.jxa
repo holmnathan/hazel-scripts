@@ -1,0 +1,44 @@
+/**
+ * Rounds a JavaScript date object to the last day of the month
+ *
+ * @param theFile {object} - Matching file
+ * @param inputAttributes[0] {string} - Matching date
+ */
+function hazelProcessFile(theFile, inputAttributes) {
+  const [theDate] = inputAttributes
+
+  // Import Objective-C Foundation Framework
+  ObjC.import("Foundation")
+
+  // Get numeric value of next month (0 – 11)
+  const month = (theDate.getMonth() + 1)
+  // Set time to midnight (Local time)
+  theDate.setHours(0, 0, 0)
+  // Set date to last day of previous month (Local time)
+  theDate.setMonth(month, 0)
+
+  return { hazelOutputAttributes: { roundedDate: theDate } }
+}
+
+/**
+ * Test Script for debugging in Script Editor App
+ */
+const testScript = () => {
+  const app = Application.currentApplication()
+  app.includeStandardAdditions = true
+
+  // var document = app.chooseFile({
+  //   withPrompt: "Please select a document to process:"
+  //   })
+
+  const testDate = new Date()
+
+  testDate.setFullYear(2018, 08, 21)
+  testDate.setHours(13, 21, 00)
+
+  hazelProcessFile(null, [testDate])
+}
+
+// testScript()
+
+// const folder = path.stringByDeletingLastPathComponent.lastPathComponent
