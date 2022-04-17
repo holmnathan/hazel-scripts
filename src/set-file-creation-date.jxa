@@ -1,10 +1,10 @@
 // Import Objective-C Foundation Framework
-ObjC.import("Foundation")
+ObjC.import("Foundation");
 
 // Use “System Events” library because HazelHelper daemon, ie. “Application.currentApplication())” cannot interact with user, ex. app.displayAlert()
 // const app = Application.currentApplication()
-const app = Application("System Events")
-app.includeStandardAdditions = true
+const app = Application("System Events");
+app.includeStandardAdditions = true;
 
 /**
  * Convert JavaScript Date object to NSDate object
@@ -14,46 +14,52 @@ app.includeStandardAdditions = true
  * @returns {object} Cocoa NSDate object
  */
 const convertJSDateToNSDate = (JSDate) => {
-  return $.NSDate.alloc.initWithTimeIntervalSince1970(JSDate/1000)
-}
+  return $.NSDate.alloc.initWithTimeIntervalSince1970(JSDate / 1000);
+};
 
 /**
  * Set the creation date of a file matched in a Hazel workflow
  *
  * @param theFile {object} - Matching file
  * @param inputAttributes[0] {date} - New target creation date (JavaScript Date object)
- * @param inputAttributes[1] {boolean} - Reset time flag
+ * @param inputAttributes[1] {boolean} - Include time flag
  */
 function hazelProcessFile(theFile, inputAttributes) {
-  const [creationDateJS, resetTime] = inputAttributes
+  const [creationDateJS, includeTime] = inputAttributes;
 
-  // Reset time to midnight (Local time zone) if resetTime flag is true
-  if (!!resetTime) creationDateJS.setHours(0, 0, 0)
+  // if includeTime flag is false:
+  // Set creation time to midnight (Local time zone)
+  if (!includeTime) creationDateJS.setHours(0, 0, 0);
 
-  const creationDateNS = convertJSDateToNSDate(creationDateJS)
+  const creationDateNS = convertJSDateToNSDate(creationDateJS);
 
   // Initialize NSFileManager to access file system
   const fileManager = $.NSFileManager.defaultManager;
 
   // Get absolute path of input file
-  const path = $(theFile.toString()).stringByStandardizingPath
-
+  const path = $(theFile.toString()).stringByStandardizingPath;
 
   // Set creation date of file
-    var error = $()
-    fileManager.setAttributesOfItemAtPathError($({NSFileCreationDate: creationDateNS}), path, error)
+  var error = $();
+  fileManager.setAttributesOfItemAtPathError(
+    $({ NSFileCreationDate: creationDateNS }),
+    path,
+    error
+  );
 
-    if (!!error.js) {
-      const alertTitle = error.localizedDescription.js
-      const alertOptions = {
-        message: error.localizedRecoverySuggestion.js,
-        as: "critical",
-        buttons: error.localizedRecoveryOptions.js
-      }
+  if (!!error.js) {
+    const alertTitle = error.localizedDescription.js;
+    const alertOptions = {
+      message: error.localizedRecoverySuggestion.js,
+      as: "critical",
+      buttons: error.localizedRecoveryOptions.js,
+    };
 
-      app.displayAlert(alertTitle, alertOptions)
-      throw new Error(alertTitle)
-    }
+    app.displayAlert(alertTitle, alertOptions);
+
+    // Stop Hazel from performing further actions on this file
+    throw new Error(alertTitle);
+  }
 }
 
 /**
@@ -62,18 +68,18 @@ function hazelProcessFile(theFile, inputAttributes) {
 const testScript = () => {
   // Ask user for a test file
   const theFile = app.chooseFile({
-    withPrompt: "Please select a test file"
-    })
+    withPrompt: "Please select a test file",
+  });
 
   // New Target creation date
-  const creationDate = new Date()
-  creationDate.setFullYear(2020, 09, 31) // Month is zero-indexed
-  creationDate.setHours(13, 21, 00)
+  const creationDate = new Date();
+  creationDate.setFullYear(2020, 09, 31); // Month is zero-indexed
+  creationDate.setHours(13, 21, 00);
 
   // Include time in creation date?
-  resetTime = true
+  includeTime = true;
 
-  hazelProcessFile(theFile, [creationDate, resetTime])
-}
+  hazelProcessFile(theFile, [creationDate, includeTime]);
+};
 
 // testScript()
