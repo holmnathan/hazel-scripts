@@ -1,0 +1,4 @@
+overrides:
+  - files: "src/**/*.jxa"
+    options:
+      parser: espree
