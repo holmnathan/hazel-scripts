@@ -1,0 +1,17 @@
+/**
+ * Hazel Workflow Condition — Set custom attribute to boolean true
+ *
+ * @remarks
+ * Pseudo condition — Always passes test
+ * Used to create a Hazel workflow attribute that can be referred to in later actions.
+ *
+ * @param theFile {object} - Matching file
+ * @param inputAttributes {array} - Empty Array
+ * returns hazelPassesScript {boolean}, hazelOutputAttributes {array}
+ */
+function hazelMatchFile(theFile, inputAttributes) {
+  return {
+    hazelPassesScript: true, // Condition always passes
+    hazelOutputAttributes: [true],
+  };
+}
