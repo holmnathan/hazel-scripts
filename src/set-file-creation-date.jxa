@@ -22,21 +22,22 @@ const convertJSDateToNSDate = (JSDate) => {
  *
  * @param theFile {object} - Matching file
  * @param inputAttributes[0] {date} - New target creation date (JavaScript Date object)
+ * @param inputAttributes[1] {boolean} - Reset time flag
  */
 function hazelProcessFile(theFile, inputAttributes) {
+  const [creationDateJS, resetTime] = inputAttributes
 
-  const [creationDateJS] = inputAttributes
+  // Reset time to midnight (Local time zone) if resetTime flag is true
+  if (!!resetTime) creationDateJS.setHours(0, 0, 0)
 
-  // Initialize NSFileManager
+  const creationDateNS = convertJSDateToNSDate(creationDateJS)
+
+  // Initialize NSFileManager to access file system
   const fileManager = $.NSFileManager.defaultManager;
 
   // Get absolute path of input file
   const path = $(theFile.toString()).stringByStandardizingPath
 
-  // Set Time to midnight (Local time zone)
-  creationDateJS.setHours(0, 0, 0)
-
-  const creationDateNS = convertJSDateToNSDate(creationDateJS)
 
   // Set creation date of file
     var error = $()
@@ -59,16 +60,20 @@ function hazelProcessFile(theFile, inputAttributes) {
  * Test Script for debugging in Script Editor App
  */
 const testScript = () => {
-  const document = app.chooseFile({
-    withPrompt: "Please select a document to process:"
+  // Ask user for a test file
+  const theFile = app.chooseFile({
+    withPrompt: "Please select a test file"
     })
 
-  const testDate = new Date()
+  // New Target creation date
+  const creationDate = new Date()
+  creationDate.setFullYear(2020, 09, 31) // Month is zero-indexed
+  creationDate.setHours(13, 21, 00)
 
-  testDate.setFullYear(2020, 09, 31) // Month is zero-indexed
-  testDate.setHours(13, 21, 00)
+  // Include time in creation date?
+  resetTime = true
 
-  hazelProcessFile(document, [testDate])
+  hazelProcessFile(theFile, [creationDate, resetTime])
 }
 
 // testScript()
