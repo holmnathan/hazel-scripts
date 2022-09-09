@@ -1,0 +1,60 @@
+// Import Objective-C Foundation Framework
+ObjC.import("Foundation");
+
+/**
+ * # Hazel Workflow Action:
+ *
+ * Wise receipts are provided in US Eastern time or Greenwich Mean Time.
+ * Converts a JavaScript date object to Pacific Time
+ *
+ * @param theFile {object} - Matching file
+ * @param inputAttributes[0] {date object} - Matching date
+ * @param inputAttributes[1] {string} - Time zone code (EDT | EST | GMT)
+ */
+function hazelProcessFile(theFile, inputAttributes) {
+  const [time, timeZoneCode] = inputAttributes;
+  const timeZoneOffset = {
+    // Get system offset in hours
+    // Note: A positive number = negative offset (ex. 7 = GMT-0700)
+    system: new Date().getTimezoneOffset() / 60,
+    target: null,
+  };
+
+  switch (timeZoneCode) {
+    case "EDT":
+      timeZoneOffset.target = 4;
+      break;
+    case "EST":
+      timeZoneOffset.target = 5;
+      break;
+    case "GMT":
+      timeZoneOffset.target = 0;
+      break;
+  }
+
+  if (timeZoneOffset.target === null)
+    throw new Error(`Time zone must be “EDT” | “EST” | “GMT”`);
+
+  const hour = time.getHours() - timeZoneOffset.system + timeZoneOffset.target;
+  time.setHours(hour);
+
+  return { hazelOutputAttributes: [time] };
+}
+
+/**
+ * Test Script for debugging in Script Editor App
+ */
+const testScript = () => {
+  const app = Application.currentApplication();
+
+  const testDate = new Date();
+
+  // testDate.setFullYear(2018, 08, 21);
+  // testDate.setHours(13, 21, 00);
+
+  const { hazelOutputAttributes } = hazelProcessFile(null, [testDate, "GMT"]);
+
+  console.log(hazelOutputAttributes);
+};
+
+// testScript();
