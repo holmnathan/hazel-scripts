@@ -28,8 +28,8 @@ function hazelProcessFile(theFile, inputAttributes) {
   const [creationDateJS, includeTime] = inputAttributes;
 
   // if includeTime flag is false:
-  // Set creation time to midnight (Local time zone)
-  if (!includeTime) creationDateJS.setHours(0, 0, 0);
+  // Set creation time to noon (Local time zone)
+  if (!includeTime) creationDateJS.setHours(12, 0, 0);
 
   const creationDateNS = convertJSDateToNSDate(creationDateJS);
 
