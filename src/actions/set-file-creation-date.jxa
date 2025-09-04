@@ -1,9 +1,7 @@
 // Import Objective-C Foundation Framework
 ObjC.import("Foundation");
 
-// Use “System Events” library because HazelHelper daemon, ie. “Application.currentApplication())” cannot interact with user, ex. app.displayAlert()
-// const app = Application.currentApplication()
-const app = Application("System Events");
+const app = Application.currentApplication()
 app.includeStandardAdditions = true;
 
 /**
@@ -25,7 +23,13 @@ const convertJSDateToNSDate = (JSDate) => {
  * @param inputAttributes[1] {boolean} - Include time flag
  */
 function hazelProcessFile(theFile, inputAttributes) {
-  const [creationDateJS, includeTime] = inputAttributes;
+  const [creationDateJS, includeTimeRaw] = inputAttributes;
+
+  // normalize the includeTime flag to a real boolean
+  const includeTime =
+    typeof includeTimeRaw === "boolean"
+      ? includeTimeRaw
+      : String(includeTimeRaw).toLowerCase() === "true";
 
   // if includeTime flag is false:
   // Set creation time to noon (Local time zone)
