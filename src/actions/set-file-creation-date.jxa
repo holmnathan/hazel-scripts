@@ -1,7 +1,19 @@
 // Import Objective-C Foundation Framework
 ObjC.import("Foundation");
 
-const app = Application.currentApplication()
+function convertUTCToLocalDate(d) {
+  return new Date(
+    d.getUTCFullYear(), // these values are interpreted as local time
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    d.getUTCHours(),
+    d.getUTCMinutes(),
+    d.getUTCSeconds(),
+    d.getUTCMilliseconds(),
+  );
+}
+
+const app = Application.currentApplication();
 app.includeStandardAdditions = true;
 
 /**
@@ -32,8 +44,8 @@ function hazelProcessFile(theFile, inputAttributes) {
       : String(includeTimeRaw).toLowerCase() === "true";
 
   // if includeTime flag is false:
-  // Set creation time to noon (Local time zone)
-  if (!includeTime) creationDateJS.setHours(12, 0, 0);
+  // Set creation time to noon (UTC)
+  if (!includeTime) creationDateJS.setUTCHours(12, 0, 0);
 
   const creationDateNS = convertJSDateToNSDate(creationDateJS);
 
@@ -48,7 +60,7 @@ function hazelProcessFile(theFile, inputAttributes) {
   fileManager.setAttributesOfItemAtPathError(
     $({ NSFileCreationDate: creationDateNS }),
     path,
-    error
+    error,
   );
 
   if (!!error.js) {
@@ -64,6 +76,12 @@ function hazelProcessFile(theFile, inputAttributes) {
     // Stop Hazel from performing further actions on this file
     throw new Error(alertTitle);
   }
+
+  return {
+    hazelOutputAttributes: {
+      "Creation Date": convertUTCToLocalDate(creationDateJS),
+    },
+  };
 }
 
 /**
@@ -76,14 +94,14 @@ const testScript = () => {
   });
 
   // New Target creation date
-  const creationDate = new Date();
-  creationDate.setFullYear(2020, 09, 31); // Month is zero-indexed
-  creationDate.setHours(13, 21, 00);
+  const testCreationDate = new Date();
+  testCreationDate.setFullYear(2020, 09, 31); // Month is zero-indexed
+  testCreationDate.setHours(13, 21, 00);
 
   // Include time in creation date?
   includeTime = true;
 
-  hazelProcessFile(theFile, [creationDate, includeTime]);
+  hazelProcessFile(theFile, [testCreationDate, includeTime]);
 };
 
 // testScript()
