@@ -1,5 +1,6 @@
 {
-  "editor.default_syntax" : "javascript+jxa",
-  "workspace.art_style" : 0,
-  "workspace.name" : "Hazel Scripts"
+  "editor.default_syntax": "javascript+jxa",
+  "workspace.art_style": 1,
+  "workspace.color": 14,
+  "workspace.name": "Hazel Scripts"
 }
