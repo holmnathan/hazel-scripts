@@ -1,17 +1,27 @@
 // Import Objective-C Foundation Framework
 ObjC.import("Foundation");
 
-function convertUTCToLocalDate(d) {
+/**
+ * Convert UTC date value misinterpreted as local time back to UTC, maintaining the same clock face value.
+ * (ex. ‘2025-11-20T07:30:00-0800’ → ‘2025-11-20T07:30:00Z’.)
+ *
+ * @param localTime {object} - JavaScript Date object
+ *
+ * @returns {object} JavaScript Date object
+ */
+reinterpretLocalTimeAsUTC = (localTime) => {
   return new Date(
-    d.getUTCFullYear(), // these values are interpreted as local time
-    d.getUTCMonth(),
-    d.getUTCDate(),
-    d.getUTCHours(),
-    d.getUTCMinutes(),
-    d.getUTCSeconds(),
-    d.getUTCMilliseconds(),
+    Date.UTC(
+      localTime.getFullYear(), // these values are interpreted as local time
+      localTime.getMonth(),
+      localTime.getDate(),
+      localTime.getHours(),
+      localTime.getMinutes(),
+      localTime.getSeconds(),
+      localTime.getMilliseconds(),
+    ),
   );
-}
+};
 
 const app = Application.currentApplication();
 app.includeStandardAdditions = true;
