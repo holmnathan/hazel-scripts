@@ -35,17 +35,17 @@ const convertJSDateToNSDate = (JSDate) => {
  * @param inputAttributes[1] {boolean} - Include time flag
  */
 function hazelProcessFile(theFile, inputAttributes) {
-  const [creationDateJS, includeTimeRaw] = inputAttributes;
+  const [creationDateJS, resetTimeRaw] = inputAttributes;
 
-  // normalize the includeTime flag to a real boolean
-  const includeTime =
-    typeof includeTimeRaw === "boolean"
-      ? includeTimeRaw
-      : String(includeTimeRaw).toLowerCase() === "true";
+  // normalize the resetTime flag to a real boolean
+  const resetTime =
+    typeof resetTimeRaw === "boolean"
+      ? resetTimeRaw
+      : String(resetTimeRaw).toLowerCase() === "true";
 
-  // if includeTime flag is false:
+  // if resetTime flag is true:
   // Set creation time to noon (UTC)
-  if (!includeTime) creationDateJS.setUTCHours(12, 0, 0);
+  if (resetTime) creationDateJS.setUTCHours(12, 0, 0);
 
   const creationDateNS = convertJSDateToNSDate(creationDateJS);
 
@@ -77,9 +77,11 @@ function hazelProcessFile(theFile, inputAttributes) {
     throw new Error(alertTitle);
   }
 
+  console.log(`Output Creation Date: ${creationDateJS}`);
+
   return {
     hazelOutputAttributes: {
-      "Creation Date": convertUTCToLocalDate(creationDateJS),
+      "Creation Date": creationDateJS,
     },
   };
 }
@@ -99,9 +101,9 @@ const testScript = () => {
   testCreationDate.setHours(13, 21, 00);
 
   // Include time in creation date?
-  includeTime = true;
+  resetTime = true;
 
-  hazelProcessFile(theFile, [testCreationDate, includeTime]);
+  hazelProcessFile(theFile, [testCreationDate, resetTime]);
 };
 
-// testScript()
+// NOVA_RUN_DEBUG testScript()
