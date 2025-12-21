@@ -31,7 +31,7 @@ reinterpretLocalTimeAsUTC = (localTime) => {
  *
  * @returns {object} JavaScript Date object
  */
-function convertUTCToLocalTime(UTCTime) {
+const convertUTCToLocalTime = (UTCTime) => {
   return new Date(
     UTCTime.getUTCFullYear(), // these values are interpreted as local time
     UTCTime.getUTCMonth(),
@@ -41,7 +41,7 @@ function convertUTCToLocalTime(UTCTime) {
     UTCTime.getUTCSeconds(),
     UTCTime.getUTCMilliseconds(),
   );
-}
+};
 
 const app = Application.currentApplication();
 app.includeStandardAdditions = true;
@@ -111,7 +111,7 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   return {
     hazelOutputAttributes: {
-      "Creation Date": convertUTCToLocalDate(creationDateJS),
+      "Creation Date": convertUTCToLocalTime(creationDateUTC),
     },
   };
 }
@@ -120,10 +120,14 @@ function hazelProcessFile(theFile, inputAttributes) {
  * Diagnostics script for Nova "Run" task
  * Asks user for a file and changes the creation date to a predetermined value
  */
-const diagnostics = () => {
+const novaRunDiagnostics = () => {
   ObjC.import("Foundation");
 
-  // Get all environment variables from Nova Task
+  /**
+   * Get all environment variables from Nova Tasks
+   *
+   * @returns {object} Javascript Key:Pair values
+   */
   function getEnvironmentVariables() {
     const envDict = $.NSProcessInfo.processInfo.environment;
     const keys = ObjC.deepUnwrap(envDict.allKeys);
@@ -139,25 +143,32 @@ const diagnostics = () => {
   // New Target creation date
   const creationDate = new Date();
   creationDate.setFullYear(
-    ENV.CREATION_YEAR,
-    ENV.CREATION_MONTH - 1,
-    ENV.CREATION_DAY,
+    ENV.CREATION_YEAR || 2000,
+    ENV.CREATION_MONTH - 1 || 01,
+    ENV.CREATION_DAY || 01,
   ); // Month is zero-indexed (ex. JAN = 00, FEB = 01, etc)
-  creationDate.setHours(
-    ENV.CREATION_HOUR,
-    ENV.CREATION_MINUTE,
-    ENV.CREATION_SECOND,
-  );
+
+  // Get resetTime flag (TRUE = set time to 12:00 PM, local time)
+  resetTime = ENV.RESET_TIME;
+
+  resetTime !== "TRUE" && resetTime !== "true" && resetTime !== TRUE
+    ? creationDate.setHours(
+        ENV.CREATION_HOUR || 16,
+        ENV.CREATION_MINUTE || 35,
+        ENV.CREATION_SECOND || 00,
+      )
+    : null;
+
+  const expectedOutputDate = reinterpretLocalTimeAsUTC(creationDate);
 
   // Ask user for a test file
   const theFile = app.chooseFile({
-    withPrompt: "Choose a file to set it’s creation date",
+    withPrompt: `Choose a file to set it’s creation date
+    
+    Expected Creation Date: ${expectedOutputDate}`,
   });
-
-  // Reset creation time to 12:00 PM (Noon) UTC?
-  resetTime = ENV.RESET_TIME;
 
   hazelProcessFile(theFile, [creationDate, resetTime]);
 };
 
-// NOVA_RUN_DIAGNOSTICS: diagnostics()
+// NOVA_RUN_DIAGNOSTICS: novaRunDiagnostics()
