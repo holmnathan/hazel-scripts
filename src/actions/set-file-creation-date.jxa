@@ -166,7 +166,7 @@ const novaRunDiagnostics = () => {
   const theFile = app.chooseFile({
     withPrompt: `Choose a file to set it’s creation date
     
-    Expected Creation Date: ${expectedOutputDate.toLocaleString("en-US", { timeZone: "UTC" })}`,
+    Expected Creation Date: ${expectedOutputDate.toLocaleString("en-US")}`,
   });
 
   hazelProcessFile(theFile, [creationDate, resetTime]);
