@@ -77,11 +77,9 @@ function hazelProcessFile(theFile, inputAttributes) {
     throw new Error(alertTitle);
   }
 
-  console.log(`Output Creation Date: ${creationDateJS}`);
-
   return {
     hazelOutputAttributes: {
-      "Creation Date": creationDateJS,
+      "Creation Date": convertUTCToLocalDate(creationDateJS),
     },
   };
 }
@@ -106,4 +104,4 @@ const testScript = () => {
   hazelProcessFile(theFile, [testCreationDate, resetTime]);
 };
 
-// NOVA_RUN_DEBUG testScript()
+// testScript()
