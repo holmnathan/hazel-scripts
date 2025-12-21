@@ -54,9 +54,7 @@ app.includeStandardAdditions = true;
  * @returns {object} Cocoa NSDate object
  */
 const convertJSDateToNSDate = (JSDate) => {
-  return $.NSDate.dateWithTimeIntervalSince1970(
-    creationDateUTC.getTime() / 1000,
-  );
+  return $.NSDate.dateWithTimeIntervalSince1970(JSDate.getTime() / 1000);
 };
 
 /**
@@ -69,8 +67,6 @@ const convertJSDateToNSDate = (JSDate) => {
 function hazelProcessFile(theFile, inputAttributes) {
   const [creationDateJS, resetTimeRaw] = inputAttributes;
 
-  const creationDateUTC = reinterpretLocalTimeAsUTC(creationDateJS);
-
   // normalize the resetTime flag to a real boolean
   const resetTime =
     typeof resetTimeRaw === "boolean"
@@ -79,8 +75,9 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   // if resetTime flag is true:
   // Set creation time to noon (local time)
-  if (resetTime) creationDateUTC.setHours(12, 0, 0, 0);
+  if (resetTime) creationDateJS.setHours(12, 0, 0, 0);
 
+  const creationDateUTC = convertUTCToLocalTime(creationDateJS);
   const creationDateNS = convertJSDateToNSDate(creationDateUTC);
 
   // Initialize NSFileManager to access file system
@@ -117,7 +114,7 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   return {
     hazelOutputAttributes: {
-      "Creation Date": convertUTCToLocalTime(creationDateUTC),
+      "Creation Date": creationDateJS,
     },
   };
 }
@@ -159,30 +156,28 @@ const novaRunDiagnostics = () => {
     return Number.isFinite(testNumber) ? testNumber : fallback;
   };
 
-  const year = validNumberOrFallback(ENV.CREATION_YEAR) || 2000;
-  const month = (validNumberOrFallback(ENV.CREATION_MONTH) || 1) - 1; // // ENV month is 1–12; convert to JS 0–11
-  const day = validNumberOrFallback(ENV.CREATION_DAY) || 1;
-  const hour = validNumberOrFallback(ENV.CREATION_HOUR) || 16;
-  const minute = validNumberOrFallback(ENV.CREATION_MINUTE) || 35;
-  const second = validNumberOrFallback(ENV.CREATION_SECOND) || 0;
-  const millisecond = validNumberOrFallback(ENV.CREATION_MILLISECOND) || 0;
+  const year = validNumberOrFallback(ENV.CREATION_YEAR, 2000);
+  const month = validNumberOrFallback(ENV.CREATION_MONTH, 1) - 1; // ENV month is 1–12; convert to JS 0–11
+  const day = validNumberOrFallback(ENV.CREATION_DAY, 1);
+  const hour = validNumberOrFallback(ENV.CREATION_HOUR, 16);
+  const minute = validNumberOrFallback(ENV.CREATION_MINUTE, 35);
+  const second = validNumberOrFallback(ENV.CREATION_SECOND, 0);
+  const millisecond = validNumberOrFallback(ENV.CREATION_MILLISECOND, 0);
 
   // New Target creation date
   const creationDate = new Date();
   creationDate.setFullYear(year, month, day);
+  creationDate.setHours(hour, minute, second, millisecond);
 
   // Get resetTime flag (TRUE = set time to 12:00 PM, local time)
   const resetTime = String(ENV.RESET_TIME || "").toLowerCase() === "true";
-  if (!resetTime) creationDate.setHours(hour, minute, second, millisecond);
 
-  const expectedOutputDate = reinterpretLocalTimeAsUTC(creationDate);
-  expectedOutputDate.setHours(12, 0, 0, 0);
+  const expectedOutputDate = convertUTCToLocalTime(creationDate);
+  if (resetTime) expectedOutputDate.setHours(12, 0, 0, 0);
 
   // Ask user for a test file
   const theFile = app.chooseFile({
-    withPrompt: `Choose a file to set it’s creation date
-    
-    Expected Creation Date: ${expectedOutputDate.toLocaleString("en-US")}`,
+    withPrompt: `Choose a file to set it’s creation date\n\nExpected Creation Date: ${expectedOutputDate.toLocaleString("en-US")}`,
   });
 
   hazelProcessFile(theFile, [creationDate, resetTime]);
