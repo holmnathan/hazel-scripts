@@ -160,12 +160,13 @@ const novaRunDiagnostics = () => {
     : null;
 
   const expectedOutputDate = reinterpretLocalTimeAsUTC(creationDate);
+  expectedOutputDate.setHours(12, 0, 0, 0);
 
   // Ask user for a test file
   const theFile = app.chooseFile({
     withPrompt: `Choose a file to set it’s creation date
     
-    Expected Creation Date: ${expectedOutputDate}`,
+    Expected Creation Date: ${expectedOutputDate.toLocaleString(toLocaleString("en-US", { timeZone: "UTC" }))}`,
   });
 
   hazelProcessFile(theFile, [creationDate, resetTime]);
