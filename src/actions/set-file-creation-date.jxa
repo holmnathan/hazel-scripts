@@ -23,6 +23,26 @@ reinterpretLocalTimeAsUTC = (localTime) => {
   );
 };
 
+/**
+ * Transform a UTC date into local time for use in filenames within the Hazel App, ensuring the original UTC values are preserved.
+ * (ex. ‘2025-11-20T07:30:00Z’ → ‘2025-11-20T02:30:00-0800’.)
+ *
+ * @param UTCTime {object} - JavaScript Date object
+ *
+ * @returns {object} JavaScript Date object
+ */
+function convertUTCToLocalTime(UTCTime) {
+  return new Date(
+    UTCTime.getUTCFullYear(), // these values are interpreted as local time
+    UTCTime.getUTCMonth(),
+    UTCTime.getUTCDate(),
+    UTCTime.getUTCHours(),
+    UTCTime.getUTCMinutes(),
+    UTCTime.getUTCSeconds(),
+    UTCTime.getUTCMilliseconds(),
+  );
+}
+
 const app = Application.currentApplication();
 app.includeStandardAdditions = true;
 
@@ -47,6 +67,8 @@ const convertJSDateToNSDate = (JSDate) => {
 function hazelProcessFile(theFile, inputAttributes) {
   const [creationDateJS, resetTimeRaw] = inputAttributes;
 
+  const creationDateUTC = reinterpretLocalTimeAsUTC(creationDateJS);
+
   // normalize the resetTime flag to a real boolean
   const resetTime =
     typeof resetTimeRaw === "boolean"
@@ -55,9 +77,9 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   // if resetTime flag is true:
   // Set creation time to noon (local time)
-  if (resetTime) creationDateJS.setHours(12, 0, 0);
+  if (resetTime) creationDateUTC.setHours(12, 0, 0);
 
-  const creationDateNS = convertJSDateToNSDate(creationDateJS);
+  const creationDateNS = convertJSDateToNSDate(creationDateUTC);
 
   // Initialize NSFileManager to access file system
   const fileManager = $.NSFileManager.defaultManager;
