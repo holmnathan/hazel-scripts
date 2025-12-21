@@ -146,13 +146,26 @@ const novaRunDiagnostics = () => {
 
   const ENV = getEnvironmentVariables();
 
-  const year = Number(ENV.CREATION_YEAR) || 2000;
-  const month = (Number(ENV.CREATION_MONTH) || 1) - 1; // // ENV month is 1–12; convert to JS 0–11
-  const day = Number(ENV.CREATION_DAY) || 1;
-  const hour = Number(ENV.CREATION_HOUR) || 16;
-  const minute = Number(ENV.CREATION_MINUTE) || 35;
-  const second = Number(ENV.CREATION_SECOND) || 0;
-  const millisecond = Number(ENV.CREATION_MILLISECOND) || 0;
+  /**
+   * Use nullish-coalescing along with an explicit check for NaN, as JavaScript considers valid zero (0) values for hour, minute, second, and millisecond (ex. midnight) as undefined, causing it to revert to a fallback value instead.
+   *
+   * @param value {string | integer}
+   * @param fallback {integer}
+   *
+   * @returns {integer} value coerced to an integer | fallback
+   */
+  const validNumberOrFallback = (value, fallback) => {
+    const testNumber = Number(value);
+    return Number.isFinite(testNumber) ? testNumber : fallback;
+  };
+
+  const year = validNumberOrFallback(ENV.CREATION_YEAR) || 2000;
+  const month = (validNumberOrFallback(ENV.CREATION_MONTH) || 1) - 1; // // ENV month is 1–12; convert to JS 0–11
+  const day = validNumberOrFallback(ENV.CREATION_DAY) || 1;
+  const hour = validNumberOrFallback(ENV.CREATION_HOUR) || 16;
+  const minute = validNumberOrFallback(ENV.CREATION_MINUTE) || 35;
+  const second = validNumberOrFallback(ENV.CREATION_SECOND) || 0;
+  const millisecond = validNumberOrFallback(ENV.CREATION_MILLISECOND) || 0;
 
   // New Target creation date
   const creationDate = new Date();
