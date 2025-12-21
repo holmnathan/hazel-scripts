@@ -85,12 +85,13 @@ function hazelProcessFile(theFile, inputAttributes) {
 }
 
 /**
- * Diagnostics script for Apple Script Editor App or Nova "Run" task
- * Asks user for a file and changes the creation date a predetermined value
+ * Diagnostics script for Nova "Run" task
+ * Asks user for a file and changes the creation date to a predetermined value
  */
 const diagnostics = () => {
   ObjC.import("Foundation");
 
+  // Get all environment variables from Nova Task
   function getEnvironmentVariables() {
     const envDict = $.NSProcessInfo.processInfo.environment;
     const keys = ObjC.deepUnwrap(envDict.allKeys);
@@ -103,20 +104,26 @@ const diagnostics = () => {
 
   const ENV = getEnvironmentVariables();
 
-  app.displayAlert(ENV.CREATION_YEAR);
+  // New Target creation date
+  const creationDate = new Date();
+  creationDate.setFullYear(
+    ENV.CREATION_YEAR,
+    ENV.CREATION_MONTH - 1,
+    ENV.CREATION_DAY,
+  ); // Month is zero-indexed (ex. JAN = 00, FEB = 01, etc)
+  creationDate.setHours(
+    ENV.CREATION_HOUR,
+    ENV.CREATION_MINUTE,
+    ENV.CREATION_SECOND,
+  );
 
   // Ask user for a test file
   const theFile = app.chooseFile({
     withPrompt: "Choose a file to set it’s creation date",
   });
 
-  // New Target creation date
-  const creationDate = new Date();
-  creationDate.setFullYear(2020, 09, 31); // Month is zero-indexed
-  creationDate.setHours(13, 21, 00);
-
-  // Include time in creation date?
-  resetTime = true;
+  // Reset creation time to 12:00 PM (Noon) UTC?
+  resetTime = ENV.RESET_TIME;
 
   hazelProcessFile(theFile, [creationDate, resetTime]);
 };
