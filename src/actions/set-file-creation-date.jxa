@@ -89,9 +89,25 @@ function hazelProcessFile(theFile, inputAttributes) {
  * Asks user for a file and changes the creation date a predetermined value
  */
 const diagnostics = () => {
+  ObjC.import("Foundation");
+
+  function getEnvironmentVariables() {
+    const envDict = $.NSProcessInfo.processInfo.environment;
+    const keys = ObjC.deepUnwrap(envDict.allKeys);
+    const result = {};
+    for (const key of keys) {
+      result[key] = envDict.objectForKey(key).js;
+    }
+    return result;
+  }
+
+  const ENV = getEnvironmentVariables();
+
+  app.displayAlert(ENV.CREATION_YEAR);
+
   // Ask user for a test file
   const theFile = app.chooseFile({
-    withPrompt: "Please select a file to set it’s creation date",
+    withPrompt: "Choose a file to set it’s creation date",
   });
 
   // New Target creation date
@@ -105,4 +121,4 @@ const diagnostics = () => {
   hazelProcessFile(theFile, [creationDate, resetTime]);
 };
 
-// NOVA_RUN_DIAGNOSTICS: debugScript()
+// NOVA_RUN_DIAGNOSTICS: diagnostics()
