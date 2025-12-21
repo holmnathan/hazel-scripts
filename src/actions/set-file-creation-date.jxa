@@ -9,7 +9,7 @@ ObjC.import("Foundation");
  *
  * @returns {object} JavaScript Date object
  */
-reinterpretLocalTimeAsUTC = (localTime) => {
+const reinterpretLocalTimeAsUTC = (localTime) => {
   return new Date(
     Date.UTC(
       localTime.getFullYear(), // these values are interpreted as local time
@@ -54,7 +54,9 @@ app.includeStandardAdditions = true;
  * @returns {object} Cocoa NSDate object
  */
 const convertJSDateToNSDate = (JSDate) => {
-  return $.NSDate.alloc.initWithTimeIntervalSince1970(JSDate / 1000);
+  return $.NSDate.dateWithTimeIntervalSince1970(
+    creationDateUTC.getTime() / 1000,
+  );
 };
 
 /**
@@ -77,7 +79,7 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   // if resetTime flag is true:
   // Set creation time to noon (local time)
-  if (resetTime) creationDateUTC.setHours(12, 0, 0);
+  if (resetTime) creationDateUTC.setHours(12, 0, 0, 0);
 
   const creationDateNS = convertJSDateToNSDate(creationDateUTC);
 
@@ -88,25 +90,29 @@ function hazelProcessFile(theFile, inputAttributes) {
   const path = $(theFile.toString()).stringByStandardizingPath;
 
   // Set creation date of file
-  var error = $();
-  fileManager.setAttributesOfItemAtPathError(
+  const error = Ref();
+
+  const ok = fileManager.setAttributesOfItemAtPathError(
     $({ NSFileCreationDate: creationDateNS }),
     path,
     error,
   );
 
-  if (!!error.js) {
-    const alertTitle = error.localizedDescription.js;
-    const alertOptions = {
-      message: error.localizedRecoverySuggestion.js,
+  if (!ok) {
+    const err = error[0];
+
+    const message =
+      err && err.localizedDescription
+        ? err.localizedDescription.js
+        : "Unknown error setting file attributes";
+
+    app.displayAlert("Error", {
+      message,
       as: "critical",
-      buttons: error.localizedRecoveryOptions.js,
-    };
+      buttons: ["OK"],
+    });
 
-    app.displayAlert(alertTitle, alertOptions);
-
-    // Stop Hazel from performing further actions on this file
-    throw new Error(alertTitle);
+    throw new Error(message);
   }
 
   return {
@@ -140,24 +146,21 @@ const novaRunDiagnostics = () => {
 
   const ENV = getEnvironmentVariables();
 
+  const year = Number(ENV.CREATION_YEAR) || 2000;
+  const month = (Number(ENV.CREATION_MONTH) || 1) - 1; // // ENV month is 1–12; convert to JS 0–11
+  const day = Number(ENV.CREATION_DAY) || 1;
+  const hour = Number(ENV.CREATION_HOUR) || 16;
+  const minute = Number(ENV.CREATION_MINUTE) || 35;
+  const second = Number(ENV.CREATION_SECOND) || 0;
+  const millisecond = Number(ENV.CREATION_MILLISECOND) || 0;
+
   // New Target creation date
   const creationDate = new Date();
-  creationDate.setFullYear(
-    ENV.CREATION_YEAR || 2000,
-    ENV.CREATION_MONTH - 1 || 01,
-    ENV.CREATION_DAY || 01,
-  ); // Month is zero-indexed (ex. JAN = 00, FEB = 01, etc)
+  creationDate.setFullYear(year, month, day);
 
   // Get resetTime flag (TRUE = set time to 12:00 PM, local time)
-  resetTime = ENV.RESET_TIME;
-
-  resetTime !== "TRUE" && resetTime !== "true" && resetTime !== TRUE
-    ? creationDate.setHours(
-        ENV.CREATION_HOUR || 16,
-        ENV.CREATION_MINUTE || 35,
-        ENV.CREATION_SECOND || 00,
-      )
-    : null;
+  const resetTime = String(ENV.RESET_TIME || "").toLowerCase() === "true";
+  if (!resetTime) creationDate.setHours(hour, minute, second, millisecond);
 
   const expectedOutputDate = reinterpretLocalTimeAsUTC(creationDate);
   expectedOutputDate.setHours(12, 0, 0, 0);
