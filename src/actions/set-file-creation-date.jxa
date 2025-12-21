@@ -85,23 +85,24 @@ function hazelProcessFile(theFile, inputAttributes) {
 }
 
 /**
- * Test Script for debugging in Script Editor App
+ * Diagnostics script for Apple Script Editor App or Nova "Run" task
+ * Asks user for a file and changes the creation date a predetermined value
  */
-const testScript = () => {
+const diagnostics = () => {
   // Ask user for a test file
   const theFile = app.chooseFile({
-    withPrompt: "Please select a test file",
+    withPrompt: "Please select a file to set it’s creation date",
   });
 
   // New Target creation date
-  const testCreationDate = new Date();
-  testCreationDate.setFullYear(2020, 09, 31); // Month is zero-indexed
-  testCreationDate.setHours(13, 21, 00);
+  const creationDate = new Date();
+  creationDate.setFullYear(2020, 09, 31); // Month is zero-indexed
+  creationDate.setHours(13, 21, 00);
 
   // Include time in creation date?
   resetTime = true;
 
-  hazelProcessFile(theFile, [testCreationDate, resetTime]);
+  hazelProcessFile(theFile, [creationDate, resetTime]);
 };
 
-// testScript()
+// NOVA_RUN_DIAGNOSTICS: debugScript()
