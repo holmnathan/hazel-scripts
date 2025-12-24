@@ -1,0 +1,45 @@
+ObjC.import("Foundation");
+ObjC.import("stdlib");
+
+const EnvironmentUtilities = {
+  /**
+   * @param {string} variableName
+   * @returns {string|null}
+   */
+  getEnvironmentVariable(variableName) {
+    const cStringPointer = $.getenv(variableName);
+    if (cStringPointer === null || cStringPointer === undefined) return null;
+
+    const nsString = $.NSString.stringWithUTF8String(cStringPointer);
+    return nsString ? String(nsString.js) : null;
+  },
+
+  /**
+   * @param {string} variableName
+   * @param {*} [fallbackValue={}]
+   * @returns {*}
+   */
+  parseJSONVariable(variableName, fallbackValue = {}) {
+    const rawString = this.getEnvironmentVariable(variableName);
+    if (rawString == null || rawString === "") return fallbackValue;
+
+    try {
+      return JSON.parse(rawString);
+    } catch {
+      return fallbackValue;
+    }
+  },
+
+  /**
+   * @param {string} variableName
+   * @returns {*}
+   * @throws {Error}
+   */
+  requireJSONVariable(variableName) {
+    const parsedValue = this.parseJSONVariable(variableName, null);
+    if (parsedValue === null) {
+      throw new Error(`${variableName} is missing or contains invalid JSON`);
+    }
+    return parsedValue;
+  },
+};
