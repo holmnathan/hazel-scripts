@@ -1,0 +1,22 @@
+ObjC.import("Foundation");
+
+const include = (filePath) => {
+  const errorReference = Ref();
+  const sourceText = $.NSString.stringWithContentsOfFileEncodingError(
+    $(filePath),
+    $.NSUTF8StringEncoding,
+    includeError,
+  );
+  if (!sourceText)
+    throw new Error(
+      `include failed: ${ObjC.unwrap(errorReference[0].localizedDescription)}`,
+    );
+  eval(ObjC.unwrap(sourceText));
+};
+
+// set this to wherever you keep the file
+include("/Users/username/Developer/hazel-scripts/src/lib/import-env.jxa");
+
+// Now available everywhere:
+const ENV = getEnvironmentVariables();
+const date = parseEnvJSON("DEBUG_CREATION_DATE");
