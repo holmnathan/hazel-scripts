@@ -1,6 +1,10 @@
 {
-  "editor.default_syntax": "javascript+jxa",
-  "workspace.art_style": 1,
-  "workspace.color": 14,
-  "workspace.name": "Hazel Scripts"
+  "apexskier.eslint.config.eslintConfigPath" : ".eslintrc.json",
+  "apexskier.eslint.config.eslintPath" : "eslint",
+  "apexskier.eslint.config.fixOnSave" : "Disable",
+  "editor.default_syntax" : "javascript+jxa",
+  "jxa.opts.linting" : false,
+  "workspace.art_style" : 1,
+  "workspace.color" : 14,
+  "workspace.name" : "Hazel Scripts"
 }
