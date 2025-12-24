@@ -1,0 +1,20 @@
+ObjC.import("Foundation");
+
+const getEnvironmentVariables = () => {
+  const env = $.NSProcessInfo.processInfo.environment; // NSDictionary
+  const keys = ObjC.deepUnwrap(env.allKeys);
+  const out = {};
+  for (const k of keys) out[k] = env.objectForKey(k).js;
+  return out;
+};
+
+const parseEnvJSON = (keyName, fallback = {}) => {
+  const env = getEnvironmentVariables();
+  const rawValue = env[keyName];
+  if (!rawValue) return fallback;
+  try {
+    return JSON.parse(rawValue);
+  } catch {
+    return fallback;
+  }
+};
