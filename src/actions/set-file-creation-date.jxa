@@ -107,12 +107,15 @@ const convertJSDateToNSDate = (JSDate) => {
  * @param inputAttributes[1] {boolean} - Include time flag
  */
 function hazelProcessFile(theFile, inputAttributes) {
-  const [creationDateJS, resetTimeRaw] = inputAttributes;
+  const [creationDateJS] = inputAttributes;
+
+  // If the filename contains " at hh.mm.ssZ", then time is present.
+  const timeIsPresent = /\bat\s\d{2}\.\d{2}\.\d{2}Z\b/.test(String(theFile));
+
+  // Only reset when the time is missing
+  const resetTime = !timeIsPresent;
 
   const creationDateUTC = reinterpretLocalTimeAsUTC(creationDateJS);
-
-  // normalize the resetTime flag to a real boolean
-  const resetTime = normalizeValueToBoolean(resetTimeRaw);
 
   // if resetTime flag is true:
   // Use 12:00 UTC to ensure the embedded creation date remains the same worldwide.
