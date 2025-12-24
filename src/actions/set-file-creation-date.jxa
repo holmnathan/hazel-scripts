@@ -4,9 +4,7 @@ ObjC.import("Foundation");
 /**
  * Append a single line of text to a log file.
  *
- * This function is designed for Hazel JavaScript for Automation (JXA) scripts where standard
- * console output is not reliably captured. It appends text by reading the existing file data,
- * concatenating the new line, and writing the combined data back to disk.
+ * This function is designed for Hazel JavaScript for Automation (JXA) scripts where standard console output is not reliably captured. It appends text by reading the existing file data, concatenating the new line, and writing the combined data back to disk.
  *
  * Notes:
  * - If the log file does not exist, it will be created.
@@ -44,6 +42,48 @@ const appendToLogFile = (message, logFilePath) => {
       lineData,
       ObjC.nil,
     );
+  }
+};
+
+/**
+ * Convert a Hazel-provided value into a JavaScript boolean.
+ *
+ * Hazel custom attributes may be bridged through AppleScript and Objective-C as different types, even when the source value was exported as a boolean. For example, a true value may arrive as the number 1, the string "1", or the string "true". This function normalizes those common representations into a strict JavaScript boolean.
+ *
+ * Rules:
+ * - If the input is a boolean, return it unchanged.
+ * - If the input is a number, treat zero as false and any nonzero value as true.
+ * - If the input is null or undefined, return false.
+ * - If the input is a string (or any other type), treat the following strings as true after
+ *   trimming and converting to lowercase: "true", "1", "yes", "y", "on". All other values are false.
+ *
+ * @param {*} value - The value to normalize, typically coming from Hazel input attributes.
+ * @returns {boolean} A strict JavaScript boolean.
+ */
+const normalizeValueToBoolean = (value) => {
+  if (value === null || value === undefined) return false;
+
+  switch (typeof value) {
+    case "boolean":
+      return value;
+
+    case "number":
+      return value !== 0;
+
+    default: {
+      const text = String(value).trim().toLowerCase();
+
+      switch (text) {
+        case "true":
+        case "1":
+        case "yes":
+        case "y":
+        case "on":
+          return true;
+        default:
+          return false;
+      }
+    }
   }
 };
 
