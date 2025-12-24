@@ -1,0 +1,7 @@
+function hazelProcessFile(theFile, inputAttributes) {
+  return {
+    hazelOutputAttributes: {
+      "Reset Time Flag": true,
+    },
+  };
+}
