@@ -76,7 +76,8 @@ function hazelProcessFile(theFile, inputAttributes) {
       : String(resetTimeRaw).toLowerCase() === "true";
 
   // if resetTime flag is true:
-  // Set creation time to noon (local time)
+  // Use 12:00 UTC to ensure the embedded creation date remains the same worldwide.
+  // With time zones ranging from UTC−12 to UTC+14, noon UTC never rolls the local calendar date backward or forward.
   if (resetTime) creationDateUTC.setUTCHours(12, 0, 0, 0);
 
   const creationDateNS = convertJSDateToNSDate(creationDateUTC);
