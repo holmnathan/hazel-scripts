@@ -1,6 +1,27 @@
 // Import Objective-C Foundation Framework
 ObjC.import("Foundation");
 
+const log = (msg) => {
+  const path = "/tmp/hazel-debug.log";
+  const fm = $.NSFileManager.defaultManager;
+
+  const lineData = $.NSString.stringWithString(
+    String(msg) + "\n",
+  ).dataUsingEncoding($.NSUTF8StringEncoding);
+
+  const existingData = fm.fileExistsAtPath(path)
+    ? fm.contentsAtPath(path)
+    : undefined;
+
+  if (existingData) {
+    const combined = $.NSMutableData.dataWithData(existingData);
+    combined.appendData(lineData);
+    fm.createFileAtPathContentsAttributes(path, combined, ObjC.nil); // <-- ObjC.nil
+  } else {
+    fm.createFileAtPathContentsAttributes(path, lineData, ObjC.nil); // <-- ObjC.nil
+  }
+};
+
 /**
  * Convert UTC date value misinterpreted as local time back to UTC, maintaining the same clock face value.
  * (ex. ‘2025-11-20T07:30:00-0800’ → ‘2025-11-20T07:30:00Z’.)
@@ -80,6 +101,12 @@ function hazelProcessFile(theFile, inputAttributes) {
   // With time zones ranging from UTC−12 to UTC+14, noon UTC never rolls the local calendar date backward or forward.
   if (resetTime) creationDateUTC.setUTCHours(12, 0, 0, 0);
 
+  log(
+    `creationDateJS ISO = ${creationDateJS && creationDateJS.toISOString ? creationDateJS.toISOString() : creationDateJS}`,
+  );
+  log(`resetTimeRaw = ${resetTimeRaw} (${typeof resetTimeRaw})`);
+  log(`resetTime = ${resetTime} (${typeof resetTime})`);
+
   const creationDateNS = convertJSDateToNSDate(creationDateUTC);
 
   // Initialize NSFileManager to access file system
@@ -116,7 +143,7 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   return {
     hazelOutputAttributes: {
-      "Creation Date": creationDateJS,
+      "Output Creation Date": creationDateUTC,
     },
   };
 }
