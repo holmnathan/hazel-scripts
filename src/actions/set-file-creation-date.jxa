@@ -1,24 +1,49 @@
 // Import Objective-C Foundation Framework
 ObjC.import("Foundation");
 
-const log = (msg) => {
-  const path = "/tmp/hazel-debug.log";
-  const fm = $.NSFileManager.defaultManager;
+/**
+ * Append a single line of text to a log file.
+ *
+ * This function is designed for Hazel JavaScript for Automation (JXA) scripts where standard
+ * console output is not reliably captured. It appends text by reading the existing file data,
+ * concatenating the new line, and writing the combined data back to disk.
+ *
+ * Notes:
+ * - If the log file does not exist, it will be created.
+ * - The message is converted to a string and a newline is added automatically.
+ * - This approach is intended for debugging. It is not optimized for large or frequent writes.
+ *
+ * @param {*} message - The value to append to the log file. It will be converted to a string.
+ * @param {string} logFilePath - Absolute path to the log file (for example, "/tmp/hazel-debug.log").
+ * @returns {void}
+ */
+const appendToLogFile = (message, logFilePath) => {
+  const fileManager = $.NSFileManager.defaultManager;
 
   const lineData = $.NSString.stringWithString(
-    String(msg) + "\n",
+    String(message) + "\n",
   ).dataUsingEncoding($.NSUTF8StringEncoding);
 
-  const existingData = fm.fileExistsAtPath(path)
-    ? fm.contentsAtPath(path)
+  const existingFileData = fileManager.fileExistsAtPath(logFilePath)
+    ? fileManager.contentsAtPath(logFilePath)
     : undefined;
 
-  if (existingData) {
-    const combined = $.NSMutableData.dataWithData(existingData);
-    combined.appendData(lineData);
-    fm.createFileAtPathContentsAttributes(path, combined, ObjC.nil); // <-- ObjC.nil
+  if (existingFileData) {
+    const combinedFileData = $.NSMutableData.dataWithData(existingFileData);
+    combinedFileData.appendData(lineData);
+
+    // Use ObjC.nil (not null) to avoid NSNull bridging errors.
+    fileManager.createFileAtPathContentsAttributes(
+      logFilePath,
+      combinedFileData,
+      ObjC.nil,
+    );
   } else {
-    fm.createFileAtPathContentsAttributes(path, lineData, ObjC.nil); // <-- ObjC.nil
+    fileManager.createFileAtPathContentsAttributes(
+      logFilePath,
+      lineData,
+      ObjC.nil,
+    );
   }
 };
 
@@ -101,11 +126,11 @@ function hazelProcessFile(theFile, inputAttributes) {
   // With time zones ranging from UTC−12 to UTC+14, noon UTC never rolls the local calendar date backward or forward.
   if (resetTime) creationDateUTC.setUTCHours(12, 0, 0, 0);
 
-  log(
+  appendToLogFile(
     `creationDateJS ISO = ${creationDateJS && creationDateJS.toISOString ? creationDateJS.toISOString() : creationDateJS}`,
   );
-  log(`resetTimeRaw = ${resetTimeRaw} (${typeof resetTimeRaw})`);
-  log(`resetTime = ${resetTime} (${typeof resetTime})`);
+  appendToLogFile(`resetTimeRaw = ${resetTimeRaw} (${typeof resetTimeRaw})`);
+  appendToLogFile(`resetTime = ${resetTime} (${typeof resetTime})`);
 
   const creationDateNS = convertJSDateToNSDate(creationDateUTC);
 
