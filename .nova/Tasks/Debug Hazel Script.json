@@ -1,5 +1,15 @@
 {
   "actions": {
+    "build": {
+      "enabled": true,
+      "postActions": [
+        {
+          "action": "build",
+          "taskName": "Build Hazel Script",
+          "type": "runTask"
+        }
+      ]
+    },
     "clean": {
       "enabled": true,
       "script": "set -euo pipefail\n\nrm -R tmp"
@@ -16,5 +26,5 @@
     "DEBUG_ENABLED": "true",
     "DEBUG_RESET_TIME": ""
   },
-  "openLogOnRun": "start"
+  "openLogOnRun": "fail"
 }
