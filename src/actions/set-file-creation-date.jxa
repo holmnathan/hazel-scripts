@@ -2,50 +2,6 @@
 ObjC.import("Foundation");
 
 /**
- * Append a single line of text to a log file.
- *
- * This function is designed for Hazel JavaScript for Automation (JXA) scripts where standard console output is not reliably captured. It appends text by reading the existing file data, concatenating the new line, and writing the combined data back to disk.
- *
- * Notes:
- * - If the log file does not exist, it will be created.
- * - The message is converted to a string and a newline is added automatically.
- * - This approach is intended for debugging. It is not optimized for large or frequent writes.
- *
- * @param {*} message - The value to append to the log file. It will be converted to a string.
- * @param {string} logFilePath - Absolute path to the log file (for example, "/tmp/hazel-debug.log").
- * @returns {void}
- */
-const appendToLogFile = (message, logFilePath) => {
-  const fileManager = $.NSFileManager.defaultManager;
-
-  const lineData = $.NSString.stringWithString(
-    String(message) + "\n",
-  ).dataUsingEncoding($.NSUTF8StringEncoding);
-
-  const existingFileData = fileManager.fileExistsAtPath(logFilePath)
-    ? fileManager.contentsAtPath(logFilePath)
-    : undefined;
-
-  if (existingFileData) {
-    const combinedFileData = $.NSMutableData.dataWithData(existingFileData);
-    combinedFileData.appendData(lineData);
-
-    // Use ObjC.nil (not null) to avoid NSNull bridging errors.
-    fileManager.createFileAtPathContentsAttributes(
-      logFilePath,
-      combinedFileData,
-      ObjC.nil,
-    );
-  } else {
-    fileManager.createFileAtPathContentsAttributes(
-      logFilePath,
-      lineData,
-      ObjC.nil,
-    );
-  }
-};
-
-/**
  * Convert a Hazel-provided value into a JavaScript boolean.
  *
  * Hazel custom attributes may be bridged through AppleScript and Objective-C as different types, even when the source value was exported as a boolean. For example, a true value may arrive as the number 1, the string "1", or the string "true". This function normalizes those common representations into a strict JavaScript boolean.
@@ -156,22 +112,14 @@ function hazelProcessFile(theFile, inputAttributes) {
   const creationDateUTC = reinterpretLocalTimeAsUTC(creationDateJS);
 
   // normalize the resetTime flag to a real boolean
-  const resetTime =
-    typeof resetTimeRaw === "boolean"
-      ? resetTimeRaw
-      : String(resetTimeRaw).toLowerCase() === "true";
+  const resetTime = normalizeValueToBoolean(resetTimeRaw);
 
   // if resetTime flag is true:
   // Use 12:00 UTC to ensure the embedded creation date remains the same worldwide.
   // With time zones ranging from UTC−12 to UTC+14, noon UTC never rolls the local calendar date backward or forward.
   if (resetTime) creationDateUTC.setUTCHours(12, 0, 0, 0);
 
-  appendToLogFile(
-    `creationDateJS ISO = ${creationDateJS && creationDateJS.toISOString ? creationDateJS.toISOString() : creationDateJS}`,
-  );
-  appendToLogFile(`resetTimeRaw = ${resetTimeRaw} (${typeof resetTimeRaw})`);
-  appendToLogFile(`resetTime = ${resetTime} (${typeof resetTime})`);
-
+  const creationDateLocal = convertUTCToLocalTime(creationDateUTC);
   const creationDateNS = convertJSDateToNSDate(creationDateUTC);
 
   // Initialize NSFileManager to access file system
@@ -208,7 +156,7 @@ function hazelProcessFile(theFile, inputAttributes) {
 
   return {
     hazelOutputAttributes: {
-      "Output Creation Date": creationDateUTC,
+      "Output Creation Date": creationDateLocal,
     },
   };
 }

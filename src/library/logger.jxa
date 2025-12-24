@@ -1,0 +1,46 @@
+// Import Objective-C Foundation Framework
+ObjC.import("Foundation");
+
+/**
+ * Append a single line of text to a log file.
+ *
+ * This function is designed for Hazel JavaScript for Automation (JXA) scripts where standard console output is not reliably captured. It appends text by reading the existing file data, concatenating the new line, and writing the combined data back to disk.
+ *
+ * Notes:
+ * - If the log file does not exist, it will be created.
+ * - The message is converted to a string and a newline is added automatically.
+ * - This approach is intended for debugging. It is not optimized for large or frequent writes.
+ *
+ * @param {*} message - The value to append to the log file. It will be converted to a string.
+ * @param {string} logFilePath - Absolute path to the log file (for example, "/tmp/hazel-debug.log").
+ * @returns {void}
+ */
+const appendToLogFile = (message, logFilePath) => {
+  const fileManager = $.NSFileManager.defaultManager;
+
+  const lineData = $.NSString.stringWithString(
+	String(message) + "\n",
+  ).dataUsingEncoding($.NSUTF8StringEncoding);
+
+  const existingFileData = fileManager.fileExistsAtPath(logFilePath)
+	? fileManager.contentsAtPath(logFilePath)
+	: undefined;
+
+  if (existingFileData) {
+	const combinedFileData = $.NSMutableData.dataWithData(existingFileData);
+	combinedFileData.appendData(lineData);
+
+	// Use ObjC.nil (not null) to avoid NSNull bridging errors.
+	fileManager.createFileAtPathContentsAttributes(
+	  logFilePath,
+	  combinedFileData,
+	  ObjC.nil,
+	);
+  } else {
+	fileManager.createFileAtPathContentsAttributes(
+	  logFilePath,
+	  lineData,
+	  ObjC.nil,
+	);
+  }
+};
