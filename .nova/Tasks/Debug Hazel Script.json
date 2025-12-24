@@ -1,0 +1,34 @@
+{
+  "actions" : {
+    "clean" : {
+      "enabled" : true,
+      "script" : "set -euo pipefail\n\nrm -R tmp"
+    },
+    "run" : {
+      "enabled" : true,
+      "preActions" : [
+        {
+          "script" : "set -euo pipefail\n\nprojectName=\"${1:-hazel-debug}\"\ndateToday=\"$(date +%F)\"\n\ntmpFolder=\"$(mktemp -d \"${TMPDIR%\/}\/${projectName}.debug.${dateToday}.XXXXXX\")\"\necho \"Temp folder: $tmpFolder\"\n\ntmpFile=\"$(mktemp \"${tmpFolder}\/${projectName}.XXXXXX\")\"\necho \"Temp file: $tmpFile\"\n\nexport DEBUG_FOLDER=\"$tmpFolder\"\nexport DEBUG_FILE=\"$tmpFile\"",
+          "type" : "runScript"
+        }
+      ],
+      "script" : "osascript -l JavaScript \"$2\" \"$3\""
+    }
+  },
+  "arguments" : [
+    "${WorkspaceName}",
+    "${File}",
+    "${WorkspaceFolder}"
+  ],
+  "environment" : {
+    "DEBUG_CREATION_DATE" : "{year: 2025, month: 12, day: 25 }",
+    "DEBUG_CREATION_TIME" : "{hour: 06, minute: 45, second: 05, millisecond: 01}",
+    "DEBUG_ENABLED" : "true",
+    "DEBUG_RESET_TIME" : "",
+    "NOVA_FILE_NAME" : "set-file-creation-date.jxa",
+    "NOVA_PROJECT_NAME" : "${WorkspaceName}",
+    "NOVA_PROJECT_PATH" : "${WorkspaceFolder}",
+    "NOVA_RELATIVE_FILE_PATH" : "${FileRelative}"
+  },
+  "openLogOnRun" : "start"
+}

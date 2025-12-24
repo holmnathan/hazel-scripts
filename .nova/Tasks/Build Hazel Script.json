@@ -1,0 +1,12 @@
+{
+  "actions" : {
+    "build" : {
+      "enabled" : true,
+      "script" : "set -euo pipefail\n\nsrc=\"$1\"\nproj=\"${2%\/}\"\n\noutdir=\"$proj\/build\"\nmkdir -p \"$outdir\"\n\nname=\"$(basename \"$src\")\"\nname=\"${name%.*}\"\n\n# Run it (stdin)\nosacompile -l JavaScript -o \"$outdir\/$name.scpt\" \"$src\""
+    }
+  },
+  "arguments" : [
+    "${File}",
+    "${WorkspaceFolder}"
+  ]
+}
